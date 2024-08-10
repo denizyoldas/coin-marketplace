@@ -1,0 +1,15 @@
+{
+  "singleQuote": true,
+  "trailingComma": "none",
+  "semi": false,
+  "arrowParents": "avoid",
+  "importOrder": [
+    "^@/(.*)$",
+    "<THIRD_PARTY_MODULES>",
+    "^@services/(.*)$",
+    "^@components/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
+}
