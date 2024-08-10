@@ -49,3 +49,17 @@ export interface ExchangeSymbol {
   filters: ExchangeFilter[]
   permissions: string[]
 }
+
+export interface EnhancedMarketData extends ExchangeSymbol {
+  baseAssetFullName?: string
+  quoteAssetFullName?: string
+}
+
+export interface Asset {
+  assetFullName: string
+  assetName: string
+  isBorrowable: boolean
+  isMortgageable: boolean
+  userMinBorrow: string
+  userMinRepay: string
+}

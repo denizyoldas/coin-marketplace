@@ -1,7 +1,12 @@
-import ExchangeTable from './components/exchange-table'
+import MainLayout from './layout/main-layout'
+import HomePage from './page/home'
 
 function App() {
-  return <ExchangeTable />
+  return (
+    <MainLayout>
+      <HomePage />
+    </MainLayout>
+  )
 }
 
 export default App

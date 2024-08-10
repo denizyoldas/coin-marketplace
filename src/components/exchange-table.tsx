@@ -6,36 +6,61 @@ import {
   useReactTable
 } from '@tanstack/react-table'
 
-import useTicker24hQuery from '@/data/use-ticker-24hr.query'
-import { Ticker24h } from '@/types/ticker.model'
+import SymbolImage from './symbol-image'
+import useExchangeInfoQuery, {
+  ExchangeInfoResponse
+} from '@/data/use-exchange-info.query'
+import formatCurrency from '@/lib/fomrat-currency'
 
-const columHelper = createColumnHelper<Ticker24h>()
+const columHelper = createColumnHelper<ExchangeInfoResponse>()
 
 const columns = [
-  columHelper.accessor('symbol', {
-    cell: (info) => info.getValue(),
-    footer: (info) => info.column.id
+  columHelper.accessor('baseAsset', {
+    cell: (info) => (
+      <div className="flex shrink-0 items-center gap-3">
+        <SymbolImage symbol={info.getValue().toLowerCase()} />
+        <div className="flex flex-grow flex-col gap-1">
+          <div className="flex items-center gap-0.5">
+            <p className="font-semibold">{info.getValue()}</p>
+            <p>/ {info.row.original.quoteAsset}</p>
+          </div>
+          <span>{info.row.original.asset?.assetFullName}</span>
+        </div>
+      </div>
+    ),
+    header: 'Crypto'
   }),
-  columHelper.accessor('priceChange', {
-    cell: (info) => info.getValue(),
-    footer: (info) => info.column.id
+  columHelper.accessor('ticker.lastPrice', {
+    cell: (info) => formatCurrency(info.getValue()),
+    header: 'Price'
   }),
-  columHelper.accessor('priceChangePercent', {
-    cell: (info) => info.getValue(),
-    footer: (info) => info.column.id
+  columHelper.accessor('ticker.volume', {
+    cell: (info) => formatCurrency(info.getValue()),
+    header: 'Market Value'
   }),
-  columHelper.accessor('highPrice', {
-    cell: (info) => info.getValue(),
-    footer: (info) => info.column.id
+  columHelper.accessor('ticker.priceChangePercent', {
+    cell: (info) => (
+      <>
+        <span
+          className={
+            Number(info.getValue()) > 0 ? 'text-green-500' : 'text-red-500'
+          }
+        >
+          {info.getValue()}%
+        </span>
+      </>
+    ),
+    header: '24H change'
   }),
-  columHelper.accessor('lowPrice', {
-    cell: (info) => info.getValue(),
-    footer: (info) => info.column.id
+  columHelper.accessor('ticker.highPrice', {
+    cell: (info) => formatCurrency(info.getValue()),
+    header: 'High'
   })
 ]
 
 export default function ExchangeTable() {
-  const { data, isLoading, error } = useTicker24hQuery()
+  const { data, isLoading, error } = useExchangeInfoQuery()
+
   const table = useReactTable({
     data: data || [],
     columns,
@@ -50,11 +75,11 @@ export default function ExchangeTable() {
   return (
     <>
       <table className="w-full">
-        <thead>
+        <thead className="bg-gray-50">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th key={header.id}>
+                <th key={header.id} className="text-start text-slate-300">
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -77,22 +102,6 @@ export default function ExchangeTable() {
             </tr>
           ))}
         </tbody>
-        <tfoot>
-          {table.getFooterGroups().map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              {footerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.footer,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </tfoot>
       </table>
 
       <button
