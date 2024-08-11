@@ -11,6 +11,8 @@ import useExchangeInfoQuery, {
   ExchangeInfoResponse
 } from '@/data/use-exchange-info.query'
 import formatCurrency from '@/lib/fomrat-currency'
+import Sparkline from './ui/sparkline'
+import Pagination from './pagination'
 
 const columHelper = createColumnHelper<ExchangeInfoResponse>()
 
@@ -53,8 +55,17 @@ const columns = [
     header: '24H change'
   }),
   columHelper.accessor('ticker.highPrice', {
-    cell: (info) => formatCurrency(info.getValue()),
-    header: 'High'
+    cell: ({ row }) => (
+      <div>
+        <Sparkline
+          openPrice={row.original.ticker?.openPrice}
+          highPrice={row.original.ticker?.highPrice}
+          lowPrice={row.original.ticker?.lowPrice}
+          closePrice={row.original.ticker?.lastPrice}
+        />
+      </div>
+    ),
+    header: 'Graph'
   })
 ]
 
@@ -79,7 +90,10 @@ export default function ExchangeTable() {
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th key={header.id} className="text-start text-slate-300">
+                <th
+                  key={header.id}
+                  className="p-2 text-start text-xs text-slate-400"
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -95,7 +109,7 @@ export default function ExchangeTable() {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
+                <td key={cell.id} className="p-2">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
@@ -104,42 +118,11 @@ export default function ExchangeTable() {
         </tbody>
       </table>
 
-      <button
-        onClick={() => table.firstPage()}
-        disabled={!table.getCanPreviousPage()}
-      >
-        {'<<'}
-      </button>
-      <button
-        onClick={() => table.previousPage()}
-        disabled={!table.getCanPreviousPage()}
-      >
-        {'<'}
-      </button>
-      <button
-        onClick={() => table.nextPage()}
-        disabled={!table.getCanNextPage()}
-      >
-        {'>'}
-      </button>
-      <button
-        onClick={() => table.lastPage()}
-        disabled={!table.getCanNextPage()}
-      >
-        {'>>'}
-      </button>
-      <select
-        value={table.getState().pagination.pageSize}
-        onChange={(e) => {
-          table.setPageSize(Number(e.target.value))
-        }}
-      >
-        {[10, 20, 30, 40, 50].map((pageSize) => (
-          <option key={pageSize} value={pageSize}>
-            {pageSize}
-          </option>
-        ))}
-      </select>
+      <Pagination
+        currentPage={1}
+        totalPages={table.getPageCount()}
+        onPageChange={(page) => table.setPageIndex(page)}
+      />
     </>
   )
 }
