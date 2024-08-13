@@ -20,14 +20,16 @@ const columHelper = createColumnHelper<Exchange>()
 const columns = [
   columHelper.accessor('baseAsset', {
     cell: (info) => (
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 flex-col items-center gap-3 md:flex-row">
         <SymbolImage symbol={info.getValue().toLowerCase()} />
         <div className="flex flex-grow flex-col gap-1">
           <div className="flex items-center gap-0.5">
             <p className="font-semibold">{info.getValue()}</p>
             <p>/ {info.row.original.quoteAsset}</p>
           </div>
-          <span>{info.row.original.assetFullName}</span>
+          <span className="text-center md:text-start">
+            {info.row.original.assetFullName}
+          </span>
         </div>
       </div>
     ),
