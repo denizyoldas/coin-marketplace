@@ -1,32 +1,26 @@
-// src/Sparkline.tsx
+import useSparklineQuery from '@/data/use-sparkline.query'
 import React from 'react'
 import { Sparklines, SparklinesLine } from 'react-sparklines'
 
 interface SparklineProps {
-  openPrice?: string
-  highPrice?: string
-  lowPrice?: string
-  closePrice?: string
+  symbol: string
 }
 
-const Sparkline: React.FC<SparklineProps> = ({
-  openPrice,
-  highPrice,
-  lowPrice,
-  closePrice
-}) => {
-  if (!openPrice || !highPrice || !lowPrice || !closePrice) {
-    return null
+const Sparkline: React.FC<SparklineProps> = ({ symbol }) => {
+  const { data } = useSparklineQuery({
+    symbol
+  })
+
+  if (!data) {
+    return false
   }
 
-  const data = [openPrice, highPrice, lowPrice, closePrice].map((price) =>
-    parseFloat(price)
-  )
+  const newData = data.map((price) => parseFloat(price))
 
-  const color = closePrice > openPrice ? 'green' : 'red'
+  const color = newData[newData.length - 1] > newData[0] ? 'green' : 'red'
 
   return (
-    <Sparklines data={data}>
+    <Sparklines data={newData}>
       <SparklinesLine color={color} style={{ fill: 'none', strokeWidth: 2 }} />
     </Sparklines>
   )

@@ -2,16 +2,15 @@
  * Formats a value as a currency string.
  *
  * @param {string | number} value - The value to format as currency.
- * @param {string} [currency='USD'] - The currency code to use for formatting.
  * @returns {string} The formatted currency string.
  */
-const formatCurrency = (value: string | number, currency = 'USD') => {
+const formatCurrency = (value: string | number): string => {
   if (typeof value === 'string') {
     value = parseFloat(value)
   }
   return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2
   }).format(value)
 }
 
