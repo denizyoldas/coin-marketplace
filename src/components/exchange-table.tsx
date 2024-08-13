@@ -5,7 +5,7 @@ import {
   useReactTable
 } from '@tanstack/react-table'
 
-import SymbolImage from './symbol-image'
+import SymbolImage from './ui/symbol-image'
 import formatNumber from '@/lib/format-number'
 import Pagination from './pagination'
 import { Exchange } from '@/types/exchange.model'
