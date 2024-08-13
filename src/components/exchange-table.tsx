@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from 'react'
 import Sparkline from './ui/sparkline'
 import cx from 'classnames'
 import { setupWebSocket } from '@/services'
+import Loading from './ui/loading'
 
 const columHelper = createColumnHelper<Exchange>()
 
@@ -138,7 +139,7 @@ export default function ExchangeTable() {
     onPaginationChange: setPagination
   })
 
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <Loading />
 
   if (error) return <div>Error: {error.message}</div>
 
@@ -186,8 +187,9 @@ export default function ExchangeTable() {
       </table>
 
       <Pagination
-        onNextPage={() => table.nextPage()}
-        onPreviousPage={() => table.previousPage()}
+        activePage={pagination.pageIndex}
+        onChange={(page) => setPagination({ ...pagination, pageIndex: page })}
+        pageCount={table.getPageCount()}
       />
     </>
   )

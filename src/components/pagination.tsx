@@ -1,30 +1,25 @@
-import {
-  Pagination as BasePagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious
-} from '@/components/ui/pagination'
+import ReactPaginate from 'react-paginate'
 
 interface PaginationProps {
-  onNextPage: () => void
-  onPreviousPage: () => void
+  onChange: (page: number) => void
+  pageCount: number
+  activePage: number
 }
 
 export default function Pagination({
-  onNextPage,
-  onPreviousPage
+  onChange,
+  pageCount,
+  activePage
 }: PaginationProps) {
   return (
-    <BasePagination>
-      <PaginationContent>
-        <PaginationItem>
-          <PaginationPrevious onClick={() => onPreviousPage()} />
-        </PaginationItem>
-        <PaginationItem>
-          <PaginationNext onClick={() => onNextPage()} />
-        </PaginationItem>
-      </PaginationContent>
-    </BasePagination>
+    <ReactPaginate
+      pageCount={pageCount}
+      containerClassName="flex gap-2 justify-center"
+      activeClassName="font-semibold"
+      onPageChange={(page) => onChange(page.selected)}
+      marginPagesDisplayed={1}
+      pageRangeDisplayed={2}
+      initialPage={activePage}
+    />
   )
 }
