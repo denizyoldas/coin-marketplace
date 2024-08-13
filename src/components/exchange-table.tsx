@@ -6,13 +6,14 @@ import {
 } from '@tanstack/react-table'
 
 import SymbolImage from './symbol-image'
-import formatCurrency from '@/lib/fomrat-currency'
+import formatNumber from '@/lib/format-number'
 import Pagination from './pagination'
 import { Exchange } from '@/types/exchange.model'
 import useExchangeQuery from '@/data/use-exchange.query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Sparkline from './ui/sparkline'
 import cx from 'classnames'
+import { setupWebSocket } from '@/services'
 
 const columHelper = createColumnHelper<Exchange>()
 
@@ -36,41 +37,41 @@ const columns = [
   columHelper.accessor('lastPrice', {
     cell: (info) => (
       <p className="flex items-end justify-end gap-1">
-        <span>{formatCurrency(info.getValue())}</span>
+        <span>{formatNumber(info.getValue())}</span>
         <span className="text-sm text-slate-400">
           {info.row.original.quoteAsset}
         </span>
       </p>
     ),
-    header: () => <span className="flex justify-end">Price</span>,
-    maxSize: 100
+    header: () => <span className="flex justify-end">Price</span>
   }),
   columHelper.accessor('marketCap', {
     cell: (info) => (
       <p className="flex items-end justify-end gap-1">
-        <span>{formatCurrency(info.getValue())}</span>
+        <span>{formatNumber(info.getValue())}</span>
         <span className="text-sm text-slate-400">
           {info.row.original.quoteAsset}
         </span>
       </p>
     ),
-    maxSize: 100,
     header: () => <span className="flex justify-end">Market Value</span>
   }),
   columHelper.accessor('priceChangePercent', {
     cell: (info) => (
-      <>
+      <div className="flex items-center justify-center">
         <span
           className={
             Number(info.getValue()) > 0 ? 'text-green-500' : 'text-red-500'
           }
         >
-          {info.getValue()}%
+          {formatNumber(info.getValue())}%
         </span>
-      </>
+      </div>
     ),
-    header: '24h Change',
-    maxSize: 100
+    header: () => (
+      <span className="flex items-center justify-center">24h Change</span>
+    ),
+    size: 120
   }),
   columHelper.accessor('symbol', {
     cell: (info) => <Sparkline symbol={info.getValue()} />,
@@ -81,11 +82,12 @@ const columns = [
 
 export default function ExchangeTable() {
   const [pagination, setPagination] = useState({
-    pageIndex: 0, //initial page index
-    pageSize: 10 //default page size
+    pageIndex: 0,
+    pageSize: 10
   })
   const [data, setData] = useState<Exchange[] | null>(null)
   const [highlightedRow, setHighlightedRow] = useState<string | null>(null)
+  const webSockets = useRef<Map<string, WebSocket>>(new Map())
   const {
     data: exchangeResponse,
     isLoading,
@@ -101,36 +103,28 @@ export default function ExchangeTable() {
 
     setData(exchangeResponse.data)
 
-    exchangeResponse.data.map((coin) => {
-      const symbol = `${coin.baseAsset.toLowerCase()}${coin.quoteAsset.toLowerCase()}`
-      const url = `wss://stream.binance.com:9443/ws/${symbol}@ticker`
+    exchangeResponse.data.forEach((coin) => {
+      const symbolKey = `${coin.baseAsset}-${coin.quoteAsset}`
 
-      const ws = new WebSocket(url)
-
-      ws.onmessage = (event) => {
-        const trade = JSON.parse(event.data)
-
-        console.log(trade)
-
-        coin.lastPrice = trade.c
-        coin.priceChangePercent = trade.P
-
-        setData([...exchangeResponse.data])
-        setHighlightedRow(coin.baseAsset)
-      }
-
-      ws.onclose = () => {
-        console.log('ws closed')
-      }
-
-      ws.onerror = (error) => {
-        console.log('ws error', error)
-      }
-
-      return () => {
-        ws.close()
+      if (!webSockets.current.has(symbolKey)) {
+        const ws = setupWebSocket(coin, (updatedCoin) => {
+          setData((prevData) =>
+            prevData
+              ? prevData.map((item) =>
+                  item.baseAsset === updatedCoin.baseAsset ? updatedCoin : item
+                )
+              : []
+          )
+          setHighlightedRow(updatedCoin.baseAsset)
+        })
+        webSockets.current.set(symbolKey, ws)
       }
     })
+
+    return () => {
+      webSockets.current.forEach((ws) => ws.close())
+      webSockets.current.clear()
+    }
   }, [exchangeResponse])
 
   const table = useReactTable({
