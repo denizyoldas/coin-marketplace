@@ -1,26 +1,29 @@
-import { Exchange } from '@/types/exchange.model'
+import { WebsocketResponse } from '@/types/index.model'
 
 /**
  * Sets up a WebSocket connection to receive ticker updates for a specific coin.
  *
- * @param {Exchange} coin - The coin for which to set up the WebSocket connection.
- * @param {(coin: Exchange) => void} updateCoin - The callback function to update the coin data when a new ticker update is received.
- * @returns {WebSocket} - The WebSocket object representing the connection.
+ * @param {string[]} symbols - The symbols of the coins to receive ticker updates for.
+ * @param {(data: WebsocketResponse) => void} onMessage - The callback function to call when a message is received.
+ * @returns {WebsocketResponse} - The WebSocket object representing the connection.
  */
 function setupWebSocket(
-  coin: Exchange,
-  updateCoin: (coin: Exchange) => void
+  symbols: string[],
+  onMessage: (data: WebsocketResponse) => void
 ): WebSocket {
-  const symbol = `${coin.baseAsset.toLowerCase()}${coin.quoteAsset.toLowerCase()}`
-  const url = `${import.meta.env.VITE_WSS_URL}/ws/${symbol}@ticker`
+  const symbol = symbols
+    .map((symbol) => symbol.toLowerCase().concat('@ticker'))
+    .join('/')
+  const url = `${import.meta.env.VITE_WSS_URL}/ws/${symbol}`
+  console.log('url', url)
 
   const ws = new WebSocket(url)
 
   ws.onmessage = (event) => {
     const trade = JSON.parse(event.data)
 
-    updateCoin({
-      ...coin,
+    onMessage({
+      symbol: trade.s,
       lastPrice: trade.c,
       priceChangePercent: trade.P
     })

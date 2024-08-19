@@ -3,3 +3,9 @@ export interface PaginationResponse<T> {
   data: T[]
   rowCount: number
 }
+
+export interface WebsocketResponse {
+  symbol: string
+  lastPrice: string
+  priceChangePercent: string
+}

@@ -1,7 +1,8 @@
 import ExchangeTable from '@/components/exchange-table'
 import Loading from '@/components/ui/loading'
 import useExchangeQuery from '@/data/use-exchange.query'
-import { useState } from 'react'
+import { setupWebSocket } from '@/services'
+import { useEffect, useState } from 'react'
 
 export default function HomePage() {
   const [pagination, setPagination] = useState({
@@ -18,6 +19,13 @@ export default function HomePage() {
     limit: pagination.pageSize,
     quoteSymbol: 'USDT'
   })
+
+  useEffect(() => {
+    const symbols = exchangeResponse?.data.map((exchange) => exchange.symbol)
+    if (!symbols) return
+    const websocket = setupWebSocket(symbols, () => {})
+    return () => websocket.close()
+  }, [exchangeResponse])
 
   if (isLoading) return <Loading />
 
