@@ -5,34 +5,23 @@ import {
   useReactTable
 } from '@tanstack/react-table'
 
-import SymbolImage from './ui/symbol-image'
 import formatNumber from '@/lib/format-number'
-import Pagination from './pagination'
+import Pagination from '../pagination'
 import { Exchange } from '@/types/exchange.model'
-import useExchangeQuery from '@/data/use-exchange.query'
-import { useEffect, useRef, useState } from 'react'
-import Sparkline from './ui/sparkline'
-import cx from 'classnames'
-import { setupWebSocket } from '@/services'
-import Loading from './ui/loading'
+import Sparkline from '../ui/sparkline'
+import ExchangeTableItem from './item'
+import BaseAsset from './base-asset'
 
 const columHelper = createColumnHelper<Exchange>()
 
 const columns = [
   columHelper.accessor('baseAsset', {
     cell: (info) => (
-      <div className="flex shrink-0 flex-col items-center gap-3 md:flex-row">
-        <SymbolImage symbol={info.getValue().toLowerCase()} />
-        <div className="flex flex-grow flex-col gap-1">
-          <div className="flex items-center gap-0.5">
-            <p className="font-semibold">{info.getValue()}</p>
-            <p>/ {info.row.original.quoteAsset}</p>
-          </div>
-          <span className="text-center md:text-start">
-            {info.row.original.assetFullName}
-          </span>
-        </div>
-      </div>
+      <BaseAsset
+        base={info.getValue()}
+        quoteAsset={info.row.original.quoteAsset}
+        assetFullName={info.row.original.assetFullName}
+      />
     ),
     header: 'Crypto',
     size: 600
@@ -83,65 +72,30 @@ const columns = [
   })
 ]
 
-export default function ExchangeTable() {
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10
-  })
-  const [data, setData] = useState<Exchange[] | null>(null)
-  const [highlightedRow, setHighlightedRow] = useState<string | null>(null)
-  const webSockets = useRef<Map<string, WebSocket>>(new Map())
-  const {
-    data: exchangeResponse,
-    isLoading,
-    error
-  } = useExchangeQuery({
-    page: pagination.pageIndex + 1,
-    limit: pagination.pageSize,
-    quoteSymbol: 'USDT'
-  })
+interface ExchangeTableProps {
+  exchange: Exchange[] | null
+  rowCount: number
+  pagination: { pageIndex: number; pageSize: number }
+  setPagination: (pagination: { pageIndex: number; pageSize: number }) => void
+}
 
-  useEffect(() => {
-    if (!exchangeResponse) return
-
-    setData(exchangeResponse.data)
-
-    exchangeResponse.data.forEach((coin) => {
-      const symbolKey = `${coin.baseAsset}-${coin.quoteAsset}`
-
-      if (!webSockets.current.has(symbolKey)) {
-        const ws = setupWebSocket(coin, (updatedCoin) => {
-          setData((prevData) =>
-            prevData
-              ? prevData.map((item) =>
-                  item.baseAsset === updatedCoin.baseAsset ? updatedCoin : item
-                )
-              : []
-          )
-          setHighlightedRow(updatedCoin.baseAsset)
-        })
-        webSockets.current.set(symbolKey, ws)
-      }
-    })
-
-    return () => {
-      webSockets.current.forEach((ws) => ws.close())
-      webSockets.current.clear()
-    }
-  }, [exchangeResponse])
-
+export default function ExchangeTable({
+  exchange,
+  rowCount,
+  pagination,
+  setPagination
+}: ExchangeTableProps) {
   const table = useReactTable({
-    data: data || [],
+    data: exchange || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
-    rowCount: exchangeResponse?.rowCount || 0,
-    onPaginationChange: setPagination
+    rowCount,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onPaginationChange: (page: any) => {
+      setPagination({ pageIndex: page.pageIndex, pageSize: page.pageSize })
+    }
   })
-
-  if (isLoading) return <Loading />
-
-  if (error) return <div>Error: {error.message}</div>
 
   return (
     <>
@@ -170,16 +124,7 @@ export default function ExchangeTable() {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className={cx('p-2 transition-colors duration-75', {
-                    'text-slate-500':
-                      highlightedRow === cell.row.original.baseAsset &&
-                      cell.column.id === 'lastPrice'
-                  })}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
+                <ExchangeTableItem key={cell.id} {...cell} isLive />
               ))}
             </tr>
           ))}

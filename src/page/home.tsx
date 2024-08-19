@@ -1,5 +1,36 @@
 import ExchangeTable from '@/components/exchange-table'
+import Loading from '@/components/ui/loading'
+import useExchangeQuery from '@/data/use-exchange.query'
+import { useState } from 'react'
 
 export default function HomePage() {
-  return <ExchangeTable />
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10
+  })
+
+  const {
+    data: exchangeResponse,
+    isLoading,
+    error
+  } = useExchangeQuery({
+    page: pagination.pageIndex + 1,
+    limit: pagination.pageSize,
+    quoteSymbol: 'USDT'
+  })
+
+  if (isLoading) return <Loading />
+
+  if (error) return <div>Error: {error.message}</div>
+
+  if (!exchangeResponse) return null
+
+  return (
+    <ExchangeTable
+      exchange={exchangeResponse?.data}
+      rowCount={exchangeResponse?.rowCount}
+      setPagination={(pagination) => setPagination(pagination)}
+      pagination={pagination}
+    />
+  )
 }
