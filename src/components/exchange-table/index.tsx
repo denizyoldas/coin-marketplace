@@ -124,7 +124,7 @@ export default function ExchangeTable({
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <ExchangeTableItem key={cell.id} {...cell} isLive />
+                <ExchangeTableItem key={cell.id} {...cell} />
               ))}
             </tr>
           ))}

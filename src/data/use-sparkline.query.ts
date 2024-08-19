@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from 'react-query'
 import { ENDPOINTS, API } from '@services'
 
 interface SparklineParams {
@@ -13,10 +13,9 @@ const getSparkline = async (params: SparklineParams) => {
 }
 
 const useSparklineQuery = (params: SparklineParams) => {
-  return useQuery<string[], Error>({
-    queryKey: ['Sparkline', params],
-    queryFn: () => getSparkline(params)
-  })
+  return useQuery<string[], Error>(['Sparkline', params], () =>
+    getSparkline(params)
+  )
 }
 
 export default useSparklineQuery

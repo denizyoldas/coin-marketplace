@@ -4,8 +4,9 @@ export interface PaginationResponse<T> {
   rowCount: number
 }
 
-export interface WebsocketResponse {
-  symbol: string
+export interface SymbolModel {
+  code: string
   lastPrice: string
   priceChangePercent: string
+  eventTime: number
 }

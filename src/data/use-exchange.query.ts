@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from 'react-query'
 import { ENDPOINTS, API } from '@services'
 import { Exchange } from '@/types/exchange.model'
 import { PaginationResponse } from '@/types/index.model'
@@ -16,11 +16,13 @@ const getExchange = async (params: ExchangeParams) => {
   return response.data
 }
 
-const useExchangeQuery = (params: ExchangeParams) => {
-  return useQuery<PaginationResponse<Exchange>, Error>({
-    queryKey: ['Exchange', params],
-    queryFn: () => getExchange(params)
-  })
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const useExchangeQuery = (params: ExchangeParams, options?: any) => {
+  return useQuery<PaginationResponse<Exchange>, Error>(
+    ['Exchange', params],
+    () => getExchange(params),
+    { ...options }
+  )
 }
 
 export default useExchangeQuery

@@ -6,4 +6,5 @@ export interface Exchange {
   lastPrice: string
   marketCap: string
   symbol: string
+  eventTime?: number
 }

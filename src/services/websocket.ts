@@ -1,21 +1,20 @@
-import { WebsocketResponse } from '@/types/index.model'
+import { SymbolModel } from '@/types/index.model'
 
 /**
  * Sets up a WebSocket connection to receive ticker updates for a specific coin.
  *
  * @param {string[]} symbols - The symbols of the coins to receive ticker updates for.
- * @param {(data: WebsocketResponse) => void} onMessage - The callback function to call when a message is received.
- * @returns {WebsocketResponse} - The WebSocket object representing the connection.
+ * @param {(data: SymbolModel) => void} onMessage - The callback function to call when a message is received.
+ * @returns {SymbolModel} - The WebSocket object representing the connection.
  */
 function setupWebSocket(
   symbols: string[],
-  onMessage: (data: WebsocketResponse) => void
+  onMessage: (data: SymbolModel) => void
 ): WebSocket {
   const symbol = symbols
     .map((symbol) => symbol.toLowerCase().concat('@ticker'))
     .join('/')
   const url = `${import.meta.env.VITE_WSS_URL}/ws/${symbol}`
-  console.log('url', url)
 
   const ws = new WebSocket(url)
 
@@ -23,9 +22,10 @@ function setupWebSocket(
     const trade = JSON.parse(event.data)
 
     onMessage({
-      symbol: trade.s,
+      code: trade.s,
       lastPrice: trade.c,
-      priceChangePercent: trade.P
+      priceChangePercent: trade.P,
+      eventTime: trade.E
     })
   }
 

@@ -5,3 +5,16 @@
 * {
   font-family: Archivo, system-ui, sans-serif;
 }
+
+@keyframes flash {
+  0% {
+    background-color: yellow;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.flash {
+  animation: flash 1s ease;
+}
